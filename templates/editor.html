@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Edit {{board.board_name}} | Inspyr{% endblock %}
+{% block content %}
+{% if userinfo['user_id'] == board.user_id %}
+<style>
+    #success {
+        color: #270;
+        background-color: #DFF2BF;
+        display: none;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 3px 3px 3px 3px;
+    }
+</style>
+
+<body>
+    <script>
+        var image_data = {};
+        var new_image_i = 0;
+        var new_images = {};
+        var deleted_images = {};
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+
+    <div class="boardHeader">
+        <div class="boardTitle">
+            <input value="{{board.board_name}}" style="font-size: 22pt;margin-top: 1%;" id="title" class="boardTitle">
+        </div>
+        <div class="boardTags">
+            <div id="addedTags" class="addedTags">
+                <h2 style="display: inline; margin-left: 20px;">Tags:</h2>
+                {% for tag in board.tags_list %}
+                <span id="{{tag}}" class="darkTag" onclick="delete_tag(this.id)">{{tag}}</span>
+                {% endfor %}
+            </div>
+            <div class="tagAdder">
+                <input type="text" id="tagInput" name="tagInput" placeholder="Enter tag here..." class="pure-input-2-3" style="display: block;"/>
+                <button class="pure-button" onclick="add_tag()" style="margin: auto;">+ Add Tag</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toolBar">
+        <div style="float:left">
+            <form method="post" id="image_form" enctype="multipart/form-data">
+                <input type="file" name="image" value="Upload image" id="image_input" accept="image/png, image/jpeg" style="display:block; margin-left: 40px;">
+                <script>
+                    $("#image_input").change(function(e) {
+                        for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
+                            // Set up html elements
+                            var img = document.createElement("img");                   
+                            var div = document.createElement("div");
+                            div.classList.add("draggable");
+                            id = "new" + new_image_i;
+                            new_image_i++;
+                            div.id = id;
+                            div.style = "position: absolute; left: 0px; top: 0px; max-width: 50%; max-height: 100vh; width: auto; height: auto;"
+                            img.style = "width: 100%; height: auto;"
+                            div.appendChild(img);
+                            $("#board_canvas").append(div);
+        
+                            // Add jQuery draggable, resizeable, and delete_image interactions
+                            $( function () { 
+                                $("#" + id).draggable({
+                                    containment: "#board_canvas",
+                                    stop: function (event, ui) {
+                                        var pos = ui.position;
+                                        new_images[id]["x"] = pos.left;
+                                        new_images[id]["y"] = pos.top;
+                                    }
+                                }); 
+                                $( "#" + id ).resizable({
+                                    aspectRatio: true,
+                                    stop: function (event) {
+                                        new_images[id]["w"] = $(this).width();
+                                        new_images[id]["h"] = $(this).height();
+                                    }
+                                });
+                                $( "#" + id).click(function() {
+                                    delete_image(id);
+                                });
+                            });
+        
+                            // Load file into img tag
+                            var file = e.originalEvent.srcElement.files[i];
+                            var reader = new FileReader();
+                            reader.onloadend = function() {
+                                img.src = reader.result;
+                                new_images[id] = {
+                                    "name": file.name,
+                                    "file": reader.result,
+                                    "x": 0,
+                                    "y": 0,
+                                    "w": img.width,
+                                    "h": img.height
+                                };
+                                console.log(new_images);
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    })
+                </script>
+            </form>
+        
+        </div>
+        <div class="pure-g" style="float: right; width: 20vw;">
+            <div class="pure-u-1-2">
+                <form method = "post" action="{{url_for('editor_delete_board')}}" onsubmit="return confirm('Do you want to delete the entire board?')">
+                    <input name = "delete_board" type="hidden" value="{{board_id}}">
+                    <button id = "submit" class="pure-button" style="background: rgb(255, 90, 90)">Delete Board</button>
+                </form>
+            </div>
+            <div class="pure-u-1-2">
+                <div id="save-box">
+                    <button id="saveButton" class="pure-button" onclick="capture(); update_board('{{board_id}}');">Save</button>
+                    <div id="success"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+
+    <script>
+        $( function() {
+            $( "#board_canvas" ).resizable({axis: "y"});
+        } );
+
+        {# Activates the draggable interaction for each image we load. Not really sure why its here but Im not gonna fuck with it #}
+        {% for image_id in image_ids %}
+            var image_id = "{{image_id[0]}}";
+            $( function() {
+                    $( "#img{{image_id[0]}}" ).draggable({
+                        containment: "#board_canvas",
+                        stop: function (event, ui) {
+                            var pos = ui.position;
+                            image_data["{{image_id[0]}}"]["x"] = pos.left;
+                            image_data["{{image_id[0]}}"]["y"] = pos.top;
+                        }
+                    });
+                    $( "#img{{image_id[0]}}" ).resizable({
+                        aspectRatio: true,
+                        stop: function (event) {
+                            image_data["{{image_id[0]}}"]["w"] = $(this).width();
+                            image_data["{{image_id[0]}}"]["h"] = $(this).height();
+                        }
+                    });
+                    $( "#img{{image_id[0]}}").click(image_id, function() {
+                        delete_image("img{{image_id[0]}}");
+                    });
+                } );
+        {% endfor %}
+    </script>
+
+    <div id="board_canvas">
+        {% for image_id in image_ids %}
+            {# Stores image position in json object #}
+            <script>
+                image_data["{{image_id[0]}}"] =  {
+                        "x": {{image_id[1]}},
+                        "y": {{image_id[2]}},
+                        "w": {{image_id[3]}},
+                        "h": {{image_id[4]}}
+                }
+            </script>
+
+            <style>
+                #img{{image_id[0]}} { 
+                    position: absolute; 
+                    left: {{image_id[1]}}px;
+                    top: {{image_id[2]}}px;
+                    max-width: 50%; 
+                    max-height: 100vh; 
+                    width: {{image_id[3]}}px; 
+                    height: {{image_id[4]}}px;
+                }
+            </style>
+
+            <div id="img{{image_id[0]}}" class="draggable">
+                <img id="delete_button" style="width: 100%; height: auto;" src="{{url_for('view_image', image_id = image_id[0])}}" alt="">
+            </div> 
+
+            <!-- <img  id="img{{image_id[0]}}" class="draggable" style="width: 100%; height: auto; top: 0;" src="{{url_for('view_image', image_id = image_id[0])}}" alt="" onclick="delete_image('{{image_id[0]}}')"> -->
+        {% endfor %}
+    </div> 
+    
+    <script>
+        document.querySelector('body').onclick = function(event) {
+            if(event.target != document.getElementById('saveButton')) {
+                document.getElementById('success').style.display = 'none';          
+            } else {
+                document.getElementById('success').style.display = 'block';   
+            }
+        }
+
+        function delete_image(image_id) { 
+            console.log(image_id);
+            var delete_confirm = confirm("Do you want to delete this image?");
+                if (delete_confirm) {
+                    var img = document.getElementById(image_id);
+                    img.remove();
+                    board_id = "{{board_id}}";
+                    deleted_images[image_id] = image_id;
+                }
+        }
+
+        function update_board(board_id) {
+            console.log("updating board");
+            var submission = {"image_data" : image_data, "new_images": new_images, "deleted_images": deleted_images};
+            console.log(JSON.stringify(submission));
+            $.ajax({	
+                type: "POST",	
+                url: "/editor/" + board_id,	
+                data: JSON.stringify(submission),	
+                contentType: "application/json",	
+                dataType: 'json' ,	
+                success: function () {
+                    console.log("Updated board");
+                } 	
+            });
+        }
+
+        function capture() {
+            html2canvas(document.getElementById("board_canvas")).then(function (canvas) {
+                var img = canvas.toDataURL("image/png",);
+                var tags = all_tags; 
+                var title = document.getElementById("title");
+                board_id = "{{board_id}}";
+                var div = document.getElementById("success");
+                $.ajax({
+                    xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+
+                    xhr.upload.addEventListener("progress", function(evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = evt.loaded / evt.total;
+                            percentComplete = parseInt(percentComplete * 100);
+                            if (percentComplete === 100) {
+                                div.innerHTML = "Saved Successfully!"; 
+                                console.log("Done");
+                            }
+
+                        }
+                    }, false);
+
+                    return xhr;
+                },
+                    type: 'POST',
+                    data: JSON.stringify({"thumbnail": img, "board_id": board_id,"tags":tags,"title":title.value}),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    url: "{{url_for('editor_save')}}",
+                    success: function(result) {
+                        alert("Saved");
+                    }
+                });
+            });
+        }
+        
+        function delete_tag(tag){
+            var delete_tag = document.getElementById(tag);
+            var tag_name = delete_tag.textContent;
+            delete_tag.remove();
+            var index = all_tags.indexOf(tag_name);
+            if (index > -1) {
+                new_all_tags = all_tags.splice(index, 1);
+            }
+        }   
+        
+        function add_tag() {
+            var tags = document.getElementById("addedTags"); 
+            var input = document.getElementById("tagInput").value; 
+            if(input != ""){
+                if(!all_tags.includes(input)){
+                    tags.innerHTML += '<span id="newTag" onclick="delete_tag(this.id)" style="color:black"></span>';
+                    document.getElementById("newTag").id = input;
+                    document.getElementById(input).textContent = input;
+                    document.getElementById("tagInput").value = "";
+                    all_tags.push(input);
+                }else{
+                    document.getElementById("tagInput").value = "";
+                }
+            }
+        }
+
+        var all_tags = [
+            {% for tag in board.tags_list %}
+                "{{tag}}",
+            {% endfor %}
+        ];
+    </script>
+</body>
+
+{% else %}
+    <h1>THIS ISNT YOUR BOARD</h1>
+{% endif %}
+{% endblock %}

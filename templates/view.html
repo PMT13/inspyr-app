@@ -1,0 +1,119 @@
+{% extends "base.html" %}	
+{% block title %}{{board.board_name}} | Inspyr{% endblock %}
+{% block content %}	
+<head>	
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>	
+    <link rel="stylesheet" href="/static/view.css">	
+</head>	
+
+<div class="boardHeader">
+        <div class="boardTitle">
+            <h3 style="text-align: center;">{{board.board_name}} - {{username}}</h3>
+        </div>
+        <div class="boardTags">
+            <div id="addedTags" class="addedTags">
+                <h2 style="display: inline; margin-left: 20px;">Tags:</h2>
+                {% for tag in board.tags_list %}
+                <span id="{{tag}}" class="darkTag" onclick="delete_tag(this.id)">{{tag}}</span>
+                {% endfor %}
+            </div>
+            <div class="tagAdder">
+                {% if userinfo['user_id'] == board.user_id %}
+                    <a class="pure-button pure-button-active" href="{{ url_for('editor', board_id = board_id)}}">Edit</a>
+                {% endif %}
+            </div>
+        </div>
+        
+</div>
+
+    
+<div class="viewWrapper">
+<div class="pure-g" >	
+    <img src="{{thumbnail}}" style="width: 90vw;" alt="">
+</div>  		
+    <div class="pure-g">	
+        <div class="pure-u-1-24"></div>	
+        <div class="pure-u-22-24" id="comments">	
+            <h1>Comments</h1>	
+            <div id="newComment">	
+                {% if userinfo == None %}	
+                    <form action="/login">	
+                    <div><button class="pure-button pure-button-primary">Login to Comment</button></div>	
+                    </form>	
+                    {% else %}	
+                <!--<form id="addComment" method="post" action="\view"> -->	
+                    <img src="{{ userinfo['picture'] }}" alt="avatar" id="userAvatar">	
+                    <textarea id="commentArea" name="commentArea" placeholder="Type here..."></textarea><br>	
+                    <input id="postComment" type="submit" value="Post Comment" onclick="postComment()" class="pure-button pure-button-primary" disabled>	
+               <!-- </form> -->	
+               {% endif %}	
+            </div>	
+            <div class="pure-u-1-2" id="commentPanel">	
+                <ul id="commentList">	
+                    {% for comment in comments %}	
+                        <li class="comment">	
+                            <div class="commentDiv"> 	
+                                <img src="{{ comment['row']['f3'] }}" alt="avatar" id="avatar">	
+                                <div class="commentContent">	
+                                    <div class="commentUser"><strong>{{ comment['row']['f2'] }}</strong></div>	
+                                    <div class="commentDate"><sub>{{ comment['row']['f4'] }}</sub></div>	
+                                    <div class="commentBody">	
+                                        <p>{{ comment['row']['f1'] }}</p>	
+                                    </div>	
+                                </div>	
+                            </div>	
+                        </li>	
+                    {% endfor %}	
+                </ul> 	
+            </div>	
+        </div>	
+        <div class="pure-u-1-24"></div>	
+    </div>	
+    <script>	
+        $(document).ready(function() {
+            $('#commentArea').keyup('input', function(event){
+                if($(this).val() == '') {
+                    $('#postComment').prop('disabled', true);
+                }else{
+                    $('#postComment').prop('disabled', false);
+                }   
+            });
+        });
+        function postComment(){	
+            var user = "{{userinfo['name']}}";	
+            var comment = document.getElementById("commentArea").value;	
+            var time = new Date().toLocaleString('en-US', { timeZone: 'UTC' });	
+            	
+            var server_data = [	
+                {"comment": comment},	
+                {"user": user},		
+                {"profilePic":"{{userinfo['picture']}}"},	
+                {"time":time}];	
+            var commentId = 0;	
+            $.ajax({	
+                type: "POST",	
+                url: "/board/{{board_id}}",	
+                data: JSON.stringify(server_data),	
+                contentType: "application/json",	
+                dataType: 'json' ,	
+                success: function(result) {	
+                    commentId = result['id'];	
+                    document.getElementById("comment")	
+                    var allComments = document.getElementById("commentList");	
+                    var newAllComments =  	
+                        '<li class="comment">' + '<div class="commentDiv">' +	
+                        '<img src="{{userinfo["picture"]}}" alt="avatar" id="avatar">' + 	
+                        '<div class="commentContent">' + '<div class="commentUser" id="commentUser"><strong>{{userinfo["name"]}}</strong></div>' + 	
+                        '<div class="commentDate" id="commentDate"><sub>' + time + '</sub></div>' + 	
+                        '</div>' + '<div class="commentBody">' + '<p id="commentText"></p>' +	
+                        '</div></div></li>' + allComments.innerHTML;	
+                    allComments.innerHTML = newAllComments;	
+                    document.getElementById("commentText").id = commentId;	
+                    document.getElementById(commentId).textContent = comment;	
+                    document.getElementById("commentArea").value = "";	
+                } 	
+            });	
+        }	
+    </script>	
+</div>
+{% endblock %}

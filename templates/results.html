@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Boards | Inspyr{% endblock %}
+    {% block content %}
+    <body>    
+        <div class="pure-g">            
+            {% for result in results %}
+                <div class="pure-u-1-3" id="search">
+                    Board {{result}} has those tags!<br>
+                    {{ boardPreview(result) }}
+                </div>
+            {% endfor %}
+            {{searchBar}}
+        </div>
+    </body>
+    {% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}My Profile | Inspyr{% endblock %}
+{% block content %}
+<div class="contentWrapper">
+<div class="logged-in-box auth0-box logged-in">
+    <img class="avatar" src="{{userinfo['picture']}}" alt="Avatar"/>
+    <h2 class="avatarName">{{userinfo['name']}}</h2>
+    <h1 style="text-align: center; margin-top: 25px;">My Boards</h1>
+    <div id="my_board_container">
+        <form action="{{url_for('create_board')}}" method="POST" name="createBoard" class="boardPreview">
+            <input type="text" placeholder="Board Name" id="board_name" name="board_name" class="pure-input" style="text-align:center;"><br>
+            <input type="submit" class="createBoard" value="Create Board">
+        </form>
+        {% for board in boards%}
+            {{ boardPreview(board.board_id,board.board_name,board.thumbnail) }}
+        {% endfor %}
+    </div>
+</div>
+</div>
+{% endblock %}

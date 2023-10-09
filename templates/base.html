@@ -1,0 +1,62 @@
+{% from 'macros.html' import boardPreview as boardPreview %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.1.0/build/pure-min.css" integrity="sha384-yHIFVG6ClnONEA5yB5DJXfW2/KC173DIQrYoZMEtBvGzmf0PKiGyNEqe9N6BNDBH" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css" integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/grids-responsive-min.css" />
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/ui-lightness/jquery-ui.css" type="text/css" />
+    <link rel="stylesheet" href="/static/main.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js"></script>
+    <script src="/static/main.js"></script>
+    <script src="/static/html2canvas.min.js"></script>
+    <title>{% block title %}Document{% endblock %}</title>
+    {% endblock %}
+</head>
+
+<body> 
+    {% block header %}
+      <div class="header">
+        <div class="home-menu pure-menu pure-menu-horizontal">
+            <a class="pure-menu-heading" href="{{url_for('home')}}">INSPYR</a>
+        
+            <ul class="pure-menu-list">
+                <li class="pure-menu-item pure-menu-selected"><a href="{{url_for('home')}}" class="pure-menu-link">Home</a></li>
+                {% if 'profile' not in session%}
+                <li class="pure-menu-item"><a href="{{url_for('login')}}" class="pure-menu-link">Login</a></li>
+                {% endif %}
+                {% if 'profile' in session %}
+                <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
+                  <a href="{{url_for('profile')}}" id="menuLink1" class="pure-menu-link">Profile</a>
+                  <ul class="pure-menu-children">
+                      <li class="pure-menu-item">
+                          <a href="/logout" class="pure-menu-link">Logout</a>
+                      </li>
+                  </ul>
+              </li>
+                {% endif %}
+            </ul>
+        </div>
+      </div>
+      <!-- <ul>
+        <li id="nav"><h1 id = "web-name">INSPYR</h1></li>
+        <li id="nav"><a href="{{url_for('home')}}">Home</a></li>
+        {% if 'profile' not in session%}
+        <li id="nav" style="float:right"><a href="{{url_for('login')}}">Login</a></li>
+        {% endif %}
+        {% if 'profile' in session %}
+        <li id="nav" style="float:right"><a href="{{url_for('profile')}}">Profile</a></li>
+        {% endif %}
+      </ul> -->
+    {% endblock %}
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
+

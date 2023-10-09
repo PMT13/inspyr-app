@@ -1,0 +1,8 @@
+{% macro boardPreview(board_id,board_name,board_thumbnails) -%}
+  <a href="{{ url_for('view_board', board_id = board_id) }}">
+    <div class="boardPreview">
+      <h3>{{ board_name }}</h3>
+      <img class="thumbnail_img" src="{{board_thumbnails}}" alt="">
+    </div>
+  </a>
+{% endmacro %}

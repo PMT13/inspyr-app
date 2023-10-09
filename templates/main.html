@@ -1,0 +1,59 @@
+    {% extends "base.html" %}
+    {% block title %}Home | Inspyr{% endblock %}
+    {% block content %}
+        <div class="contentWrapper">
+        <div class="pure-g">
+            <div class="pure-u-1 pure-u-md-1-5"></div>
+            <div class="pure-u-1 pure-u-md-3-5" id="searchComponents">
+                <!-- Grid within grid,
+                    but changing the cell sizes so they can occupy
+                    100% the parent cell make the right cell go under
+                    the left cell instead. -->
+                    <h1>Welcome!</h1>
+                    <h2>Browse image boards below, or log in to create your own!</h2>
+                    <form method="GET" id = "search" class="pure-form pure-form-aligned" style="margin-bottom: 0px;" autocomplete="off">
+                        <input type="text" id="searchBar" name="searchBar" placeholder="Enter keywords here..." style="text-align:left; display: inline; padding-bottom: 0px;"/> 
+                        <button type="button" class="pure-button" id="addKeyword" style="display: inline;">+ Add Keyword/Tag</button>
+                    </form>
+                    <label style="margin: 10px;" for="includeAll" > 
+                        <input type="checkbox" id="includeAll" name="includeAll" onclick="getBoards()"/> Inlcude all keywords/tags
+                    </label>
+                     
+                    
+                    <!-- <div id="tagLabel">Added Keywords:</div> -->
+                    <div id="addedKeywords">
+                        <h3 id="tagLabel" style="display: inline;">Added Keywords:</h3>
+                    </div>
+                    <div>
+                        <h2>Tags List</h2>
+                        <div id="tagContainer">
+                        {% for tag in tags %}
+                        <span class="pure-u-1 pure-u-md-1-24" class="lightTag" style="background-color: white; width:fit-content; margin-top:1%;"id="{{tag}}1" onclick="addTagToSearch(this.id)" >{{tag}}</span>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    <div id="board_container">
+                        <div class="lds-dual-ring" id="loading" style="display: none;"></div>
+                        {% for i in range(boards | length) %}
+                            {{ boardPreview(boards[i],board_names[i],board_thumbnails[i]) }}
+                        {% endfor %}
+                    </div>
+            </div>
+            <div class="pure-u-1 pure-u-md-1-5"></div>
+        </div>
+        <script>
+            $( function() {
+                var matching_tags = [
+                    {% for tag in tags %}
+                        "{{tag}}",
+                    {% endfor %}
+                ];
+                $( "#searchBar" ).autocomplete({
+                source: matching_tags
+                });
+            });
+            document.getElementById("addKeyword").addEventListener("click", addKeyword);
+        </script>
+        <script src="../static/main.js"></script>
+        </div>
+    {% endblock %}
